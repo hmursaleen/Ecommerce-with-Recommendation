@@ -1,0 +1,15 @@
+<div class="flex flex-wrap"> <!--want to show 3 products per row, so i've to use flex and use width = 1/3 -->
+	{% for product in products %}
+	<div class="product w-1/5 p-2"> <!--for 2 padding space between them -->
+		<div class="p-4 bg-gray-100"> <!--inner padding of 4 -->
+			<a href="{%  url 'product_detail' product.category.slug product.slug %}">
+			<div class="image mb-2">
+				<img src="{{ product.get_thumbnail }}" alt="Image of {{ product.title }}">
+			</div>
+			<h2 class="text-xl">{{ product.title }}</h2>
+			<p class="text-s text-gray-600">৳ {{ product.price }} </p>
+			</a>
+		</div>
+	</div>
+	{% endfor %}
+</div>

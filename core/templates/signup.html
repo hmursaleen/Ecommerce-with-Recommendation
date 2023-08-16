@@ -1,0 +1,32 @@
+{% extends "base.html" %} 
+{% block title %} Sign up {% endblock title %}
+{% block content %}
+
+<h1>Sign Up</h1>
+    <form method="post" class="py-4">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="mt-2 py-2 px-4 bg-green-500 hover:bg-green-900 rounded-xl text-white">Sign Up</button>
+    </form>
+<p>Already have an account? <a href="{% url 'login' %}" class="py-2 px-4 bg-green-500 hover:bg-green-900 rounded-xl text-white">Login</a></p>
+
+{% if form.errors %}
+    <div class="errors">
+        <h3>Errors:</h3>
+        <ul>
+            {% for field in form %}
+            {% if field.errors %}
+            <li>{{ field.label }}:
+                <ul>
+                    {% for error in field.errors %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </li>
+            {% endif %}
+            {% endfor %}
+        </ul>
+    </div>
+{% endif %}
+
+{% endblock content %}

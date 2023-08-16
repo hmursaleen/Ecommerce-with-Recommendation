@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block title %}Search Result{% endblock %}
+
+{% block content %}
+<h1 class="text-2xl">Search</h1>
+<h2 class="text-xs text-gray-600">Search results for "{{ query }}":</h2>
+
+{% if products %}
+{% include 'products.html' %}
+{% else %}
+<p>No matching results</p>
+{% endif %}
+{% endblock %}
