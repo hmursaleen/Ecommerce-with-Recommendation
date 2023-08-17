@@ -7,7 +7,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import authenticate, login, logout
 from django.utils.text import slugify
 from django.db.models import Q, Count
-from .models import Product, Category, UserItemInteraction, Order, OrderItem
+from .models import Product, Category, UserItemInteraction, Order, OrderItem, Userprofile
 from sklearn.metrics.pairwise import cosine_similarity, pairwise_distances, linear_kernel
 from sklearn.feature_extraction.text import TfidfVectorizer
 from itertools import chain
@@ -16,16 +16,13 @@ import numpy as np
 import json
 from django.http import JsonResponse
 from .cart import Cart
-from .forms import OrderForm
-
-
+from .forms import OrderForm, ProductForm
 import stripe
-stripe.api_key = "sk_test_51NUXlWSDhw8NOhRD4Tck7ihluuTThDgMczuY7trorZ6k3iFYVjsutzMErqeOc9M06Geueni0wTvIMT9hN5rdnXo200aHeDSRRQ"
 
 
 
 def home(request):
-    products = Product.objects.all()
+    products = Product.objects.filter(status=Product.ACTIVE)
     return render(request, 'home.html', {
         'products' : products,
         })
@@ -49,6 +46,120 @@ def signup(request):
 
 
 
+
+
+
+@login_required
+def mystore(request):
+    products = request.user.products.exclude(status=Product.DELETED)
+    order_items = OrderItem.objects.filter(product__user=request.user)
+
+    return render(request, 'mystore.html', {
+        'products' : products,
+        'order_items' : order_items,
+        })
+
+
+
+
+
+@login_required
+def mystore_order_detail(request, pk):
+    order = get_object_or_404(Order, pk=pk)
+
+    return render(request, 'mystore_order_detail.html', {
+        'order' : order,
+        })
+
+
+
+'''
+@login_required
+def add_product(request):
+    if request.method == 'POST':
+        form = ProductForm(request.POST, request.FILES)
+        if form.is_valid():
+            product = form.save(commit=False)
+            product.user = request.user
+            product.save()
+            return redirect('mystore')  # Redirect to a page displaying the list of products
+    else:
+        form = ProductForm()
+    return render(request, 'add_product.html', {'form': form})
+'''
+
+
+
+
+@login_required
+def add_product(request):
+    if request.method == 'POST':
+        form = ProductForm(request.POST, request.FILES)
+
+        if form.is_valid():
+            title = request.POST.get('title')
+            product = form.save(commit=False)
+            product.user = request.user
+            product.slug = slugify(title)
+            product.save()
+            messages.success(request, 'Product added successfully!')
+            return redirect('mystore')
+
+    else:
+        form = ProductForm()
+
+    return render(request, 'add_product.html', {
+        'title' : 'Add product',
+        'form' : form,
+        })
+
+
+
+
+
+
+@login_required
+def edit_product(request, pk):
+    product = Product.objects.filter(user=request.user).get(pk=pk)
+    if request.method == 'POST':
+        form = ProductForm(request.POST, request.FILES, instance=product)
+
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Changes saved successfully!')
+            return redirect('mystore')
+
+    else:
+        form = ProductForm(instance=product)
+
+    return render(request, 'add_product.html', {
+        'title' : 'Edit product',
+        'product' : product,
+        'form' : form
+        })
+
+
+
+
+
+
+
+@login_required
+def delete_product(request, pk):
+    product = Product.objects.filter(user=request.user).get(pk=pk)
+    product.status = Product.DELETED 
+    product.save()
+    messages.success(request, 'Product deleted successfully')
+    return redirect('mystore')
+
+
+
+
+
+
+@login_required
+def myaccount(request):
+    return render(request, 'myaccount.html')
 
 
 
@@ -182,7 +293,7 @@ def checkout(request):
 
 def search(request):
     query = request.GET.get('query', '')
-    products = Product.objects.filter(Q(title__icontains=query) | Q(slug__icontains=query))
+    products = Product.objects.filter(status=Product.ACTIVE).filter(Q(title__icontains=query) | Q(slug__icontains=query))
     return render(request, 'search.html', {
         'query' : query,
         'products' : products,
@@ -426,7 +537,7 @@ def hybrid_recommendation(user, product):
 
 
 def product_detail(request, category_slug, slug):
-    product = get_object_or_404(Product, slug=slug)
+    product = get_object_or_404(Product, slug=slug, status=Product.ACTIVE)
     UserItemInteraction.objects.create(user=request.user, product=product)
     recommended_products = hybrid_recommendation(request.user, product)
     return render(request, 'product_detail.html', {
@@ -441,7 +552,7 @@ def product_detail(request, category_slug, slug):
 
 def category_detail(request, slug):
     category = get_object_or_404(Category, slug=slug)
-    products = category.products.all()
+    products = category.products.filter(status=Product.ACTIVE)
     return render(request, 'category_detail.html', {
         'category' : category,
         'products' : products,
@@ -456,7 +567,7 @@ def category_detail(request, slug):
 
 def vendor_detail(request, pk):
     user = User.objects.get(pk=pk)
-    products = user.products.all()
+    products = user.products.filter(status=Product.ACTIVE)
     return render(request, 'vendor_detail.html', {
         'user' : user,
         'products' : products,

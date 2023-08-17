@@ -21,13 +21,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get("SECRET_KEY")
+SECRET_KEY = 'django-insecure-d++$01&zrs*)bv7d_ok%t%&v!a=1anho_*gp0&5$qnirc36)ev'
 
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get("DEBUG", "False").lower() == "true"
+DEBUG = True
 
-ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS").split(" ")
+ALLOWED_HOSTS = []
 
 
 CART_SESSION_ID = 'cart'
@@ -84,7 +84,7 @@ WSGI_APPLICATION = 'shopit.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-database_url = os.environ.get("DATABASE_URL")
+#database_url = os.environ.get("DATABASE_URL")
 
 DATABASES = {
     'default': {
@@ -93,7 +93,7 @@ DATABASES = {
     }
 }
 
-DATABASES["default"] = dj_database_url.parse(database_url)
+#DATABASES["default"] = dj_database_url.parse(database_url)
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 

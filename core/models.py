@@ -8,6 +8,15 @@ from PIL import Image
 
 
 
+class Userprofile(models.Model):
+	user = models.OneToOneField(User, related_name='userprofile', on_delete=models.CASCADE)
+	is_vendor = models.BooleanField(default=False)
+	def __str__(self):
+		return self.user.username 
+
+
+
+
 class Category(models.Model):
 	title = models.CharField(max_length=50)
 	slug = models.SlugField(max_length=50)
@@ -22,6 +31,17 @@ class Category(models.Model):
 
 
 class Product(models.Model):
+	DRAFT = 'draft'
+	WAITING_APPROVAL = 'waitingapproval' 
+	ACTIVE = 'active'
+	DELETED = 'deleted'
+
+	STATUS_CHOICES = {
+		(DRAFT, 'Draft'), 
+		(WAITING_APPROVAL, 'Waiting approval'),
+		(ACTIVE, 'Active'),
+		(DELETED, 'Deleted'),
+	}
 	user = models.ForeignKey(User, related_name='products', on_delete=models.CASCADE)
 	category = models.ForeignKey(Category, related_name='products', on_delete=models.CASCADE)
 	title = models.CharField(max_length=50)
@@ -32,7 +52,7 @@ class Product(models.Model):
 	thumbnail = models.ImageField(upload_to='uploads/product_images/thumbnail', blank=True, null=True)
 	created_at = models.DateTimeField(auto_now_add=True)
 	updated_at = models.DateTimeField(auto_now=True)
-	#status = models.CharField(max_length=50, choices=STATUS_CHOICES, default=ACTIVE)
+	status = models.CharField(max_length=50, choices=STATUS_CHOICES, default=ACTIVE)
 
 
 	class Meta:
@@ -100,8 +120,14 @@ class Order(models.Model):
 
 
 
+
+
+
 class OrderItem(models.Model):
 	order = models.ForeignKey(Order, related_name='items', on_delete=models.CASCADE)
 	product = models.ForeignKey(Product, related_name='items', on_delete=models.CASCADE)
 	price = models.IntegerField()
 	quantity = models.IntegerField(default=1)
+
+	def __str__(self):
+		return self.product

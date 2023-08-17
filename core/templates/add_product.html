@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<h1 class="text-2xl">{{ title }}</h1>
+
+
+<h1>Add Product</h1>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Add Product</button>
+    </form>
+
+{% if product %}
+<a href="{% url 'delete_product' product.id %}" class="mt-2 inline-block py-4 px-8 bg-red-500 text-white">Delete product</a>
+{% endif %}
+
+{% endblock %} 
