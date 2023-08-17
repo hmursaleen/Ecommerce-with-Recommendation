@@ -7,7 +7,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import authenticate, login, logout
 from django.utils.text import slugify
 from django.db.models import Q, Count
-from .models import Product, Category, UserItemInteraction, Order, OrderItem, Userprofile
+from .models import Product, Category, UserItemInteraction, Order, OrderItem, Userprofile, UserPurchase, Comment
 from sklearn.metrics.pairwise import cosine_similarity, pairwise_distances, linear_kernel
 from sklearn.feature_extraction.text import TfidfVectorizer
 from itertools import chain
@@ -16,7 +16,7 @@ import numpy as np
 import json
 from django.http import JsonResponse
 from .cart import Cart
-from .forms import OrderForm, ProductForm
+from .forms import OrderForm, ProductForm, CommentForm
 import stripe
 
 
@@ -273,6 +273,7 @@ def checkout(request):
             price = product.price * quantity
 
             item = OrderItem.objects.create(order=order, product=product, price=price, quantity=quantity)
+            UserPurchase.objects.create(user=request.user, product=product, order=order)
 
         cart.clear()
 
@@ -536,14 +537,32 @@ def hybrid_recommendation(user, product):
 
 
 
+
 def product_detail(request, category_slug, slug):
     product = get_object_or_404(Product, slug=slug, status=Product.ACTIVE)
     UserItemInteraction.objects.create(user=request.user, product=product)
     recommended_products = hybrid_recommendation(request.user, product)
+
+    user_bought_products = UserPurchase.objects.filter(user=request.user, product=product).exists()
+
+    comment_form = CommentForm(request.POST or None)
+
+    if request.method == 'POST' and comment_form.is_valid() and user_bought_products:
+        comment_text = comment_form.cleaned_data['text']
+        Comment.objects.create(user=request.user, product=product, text=comment_text)
+        # Redirect or refresh the page after adding a comment
+
+    comments = Comment.objects.filter(product=product)
+
     return render(request, 'product_detail.html', {
         'product': product,
-        'recommended_products' : recommended_products,
+        'recommended_products': recommended_products,
+        'user_bought_products': user_bought_products,
+        'comment_form': comment_form,
+        'comments' : comments,
     })
+
+
 
 
 

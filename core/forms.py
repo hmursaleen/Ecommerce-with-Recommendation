@@ -1,9 +1,8 @@
 from django import forms
-from .models import Product, Order
+from .models import Product, Order, Comment
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
  
-
 
 
 class OrderForm(forms.ModelForm):
@@ -41,6 +40,18 @@ class ProductForm(forms.ModelForm):
 			'class' : 'w-full p-4 border border-gray-200 rounded-xl'
 			}),
 		}
+
+
+
+
+
+class CommentForm(forms.ModelForm):
+    class Meta:
+        model = Comment
+        fields = ['text']
+        widgets = {
+            'text': forms.Textarea(attrs={'placeholder': 'Add your comment here...'}),
+        }
 
 
 

@@ -98,8 +98,7 @@ class UserItemInteraction(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-    	return self.product
-
+    	return f"{self.user.username} viewed {self.product.title}"
 
 
 
@@ -122,6 +121,17 @@ class Order(models.Model):
 
 
 
+class UserPurchase(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    order = models.ForeignKey('Order', related_name='purchases', on_delete=models.CASCADE)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} bought {self.product.title}"
+
+
+
 
 class OrderItem(models.Model):
 	order = models.ForeignKey(Order, related_name='items', on_delete=models.CASCADE)
@@ -131,3 +141,16 @@ class OrderItem(models.Model):
 
 	def __str__(self):
 		return self.product
+
+
+
+
+
+class Comment(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Comment by {self.user.username} on {self.product.title}"

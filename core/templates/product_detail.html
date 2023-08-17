@@ -26,6 +26,28 @@
 
 <a href="{% url 'add_to_cart' product.id %}" class="inline-block mt-2 px-4 py-1 bg-teal-500 text-white rounded-xl">Add to cart</a>
 
+
+{% if user.is_authenticated and user_bought_products %}
+<form class="mt-4" method="post" action="">
+    {% csrf_token %}
+    {{ comment_form.text }}
+    <button type="submit" class="mt-2 px-4 py-1 bg-blue-500 text-white rounded-xl">Add Comment</button>
+</form>
+{% endif %}
+
+
+<h2 class="mt-4 text-2xl">Comments</h2>
+<div class="mt-2">
+    {% for comment in comments %}
+    <div class="border p-2 mt-2">
+        <p>{{ comment.text }}</p>
+        <p class="text-sm text-gray-500">By {{ comment.user.username }} - {{ comment.created_at }}</p>
+    </div>
+    {% endfor %}
+</div>
+
+
+
 <h2 class="mt-4 text-2xl"> You might also like </h2>
 
 <div class="mt-2 flex flex-wrap"> <!--want to show 3 products per row, so i've to use flex and use width = 1/3 -->
