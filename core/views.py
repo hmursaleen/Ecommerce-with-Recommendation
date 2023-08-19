@@ -6,8 +6,8 @@ from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import authenticate, login, logout
 from django.utils.text import slugify
-from django.db.models import Q, Count
-from .models import Product, Category, UserItemInteraction, Order, OrderItem, Userprofile, UserPurchase, Comment
+from django.db.models import Q, Count, Avg
+from .models import Product, Category, UserItemInteraction, Order, OrderItem, Userprofile, UserPurchase, Comment, UserRating
 from sklearn.metrics.pairwise import cosine_similarity, pairwise_distances, linear_kernel
 from sklearn.feature_extraction.text import TfidfVectorizer
 from itertools import chain
@@ -16,7 +16,7 @@ import numpy as np
 import json
 from django.http import JsonResponse
 from .cart import Cart
-from .forms import OrderForm, ProductForm, CommentForm
+from .forms import OrderForm, ProductForm, CommentForm, RatingForm
 import stripe
 
 
@@ -43,6 +43,12 @@ def signup(request):
         form = UserCreationForm()
     
     return render(request, 'signup.html', {'form': form})
+
+
+
+
+
+
 
 
 
@@ -546,13 +552,22 @@ def product_detail(request, category_slug, slug):
     user_bought_products = UserPurchase.objects.filter(user=request.user, product=product).exists()
 
     comment_form = CommentForm(request.POST or None)
+    rating_form = RatingForm(request.POST or None)  # Create a form to capture ratings
 
     if request.method == 'POST' and comment_form.is_valid() and user_bought_products:
         comment_text = comment_form.cleaned_data['text']
         Comment.objects.create(user=request.user, product=product, text=comment_text)
         # Redirect or refresh the page after adding a comment
 
+    if request.method == 'POST' and rating_form.is_valid() and user_bought_products:
+        rating = rating_form.cleaned_data['rating']
+        UserRating.objects.update_or_create(user=request.user, product=product, defaults={'rating': rating})
+
     comments = Comment.objects.filter(product=product)
+    ratings = UserRating.objects.filter(product=product)
+    average_rating = ratings.aggregate(Avg('rating'))['rating__avg'] or 0
+
+
 
     return render(request, 'product_detail.html', {
         'product': product,
@@ -560,6 +575,9 @@ def product_detail(request, category_slug, slug):
         'user_bought_products': user_bought_products,
         'comment_form': comment_form,
         'comments' : comments,
+        'rating_form': rating_form,
+        'ratings': ratings,
+        'average_rating': average_rating,
     })
 
 
@@ -584,13 +602,15 @@ def category_detail(request, slug):
 
 
 
+
 def vendor_detail(request, pk):
-    user = User.objects.get(pk=pk)
+    user = get_object_or_404(User, pk=pk)
     products = user.products.filter(status=Product.ACTIVE)
     return render(request, 'vendor_detail.html', {
-        'user' : user,
-        'products' : products,
-        })
+        'user': user,
+        'products': products,
+    })
+
 
 
 

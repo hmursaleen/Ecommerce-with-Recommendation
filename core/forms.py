@@ -14,6 +14,7 @@ class OrderForm(forms.ModelForm):
 
 
 
+
 class ProductForm(forms.ModelForm):
     class Meta:
         model = Product
@@ -52,6 +53,19 @@ class CommentForm(forms.ModelForm):
         widgets = {
             'text': forms.Textarea(attrs={'placeholder': 'Add your comment here...'}),
         }
+
+
+
+
+
+
+class RatingForm(forms.Form):
+    rating = forms.DecimalField(label='Rating', max_digits=3, decimal_places=2, min_value=0, max_value=10)
+
+
+
+
+
 
 
 

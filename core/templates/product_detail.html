@@ -48,6 +48,18 @@
 
 
 
+<h2 class="mt-4 text-2xl">Average Rating: {{ average_rating }}</h2>
+
+{% if user.is_authenticated and user_bought_products %}
+<form class="mt-4" method="post" action="">
+    {% csrf_token %}
+    {{ rating_form.rating.label_tag }} {{ rating_form.rating }}
+    <button type="submit" class="mt-2 px-4 py-1 bg-blue-500 text-white rounded-xl">Rate Product</button>
+</form>
+{% endif %}
+
+
+
 <h2 class="mt-4 text-2xl"> You might also like </h2>
 
 <div class="mt-2 flex flex-wrap"> <!--want to show 3 products per row, so i've to use flex and use width = 1/3 -->
