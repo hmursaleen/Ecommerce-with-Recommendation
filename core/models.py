@@ -47,13 +47,14 @@ class Product(models.Model):
 	title = models.CharField(max_length=50)
 	slug = models.SlugField(max_length=50)
 	description = models.TextField(blank=True)
-	price = models.IntegerField()
+	price = models.PositiveIntegerField()
 	image = models.ImageField(upload_to='uploads/product_images', blank=True, null=True)
 	thumbnail = models.ImageField(upload_to='uploads/product_images/thumbnail', blank=True, null=True)
 	created_at = models.DateTimeField(auto_now_add=True)
 	updated_at = models.DateTimeField(auto_now=True)
 	status = models.CharField(max_length=50, choices=STATUS_CHOICES, default=ACTIVE)
 	average_rating = models.DecimalField(max_digits=3, decimal_places=2, default=0)
+	view_count = models.PositiveIntegerField(default=0)
 
 	class Meta:
 		ordering = ('-created_at',)

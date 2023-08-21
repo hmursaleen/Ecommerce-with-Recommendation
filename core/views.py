@@ -410,11 +410,12 @@ def item_based_collaborative_filtering(product):
     sorted_product_ids = [x for _, x in sorted(zip(similarity_scores, product_ids), reverse=True)]
 
     # Get the top N most similar product IDs (excluding the target product)
-    top_similar_product_ids = sorted_product_ids[:5]
-
+    top_similar_product_ids = sorted_product_ids[:6]
+   
     # Get the actual Product objects for the recommended product IDs
-    recommended_products = Product.objects.filter(id__in=top_similar_product_ids)
-    recommended_products = recommended_products.exclude(slug=product.slug)
+    recommended_products = [get_object_or_404(Product, id=x) for x in top_similar_product_ids if x != product.id][:5]
+    #recommended_products = Product.objects.filter(id__in=top_similar_product_ids)
+    #recommended_products = recommended_products.exclude(slug=product.slug)
     return recommended_products
 
 
@@ -426,10 +427,10 @@ def item_based_collaborative_filtering(product):
 
 def content_based_recommendation(user, product):
     viewed_interactions = UserItemInteraction.objects.filter(user=user)
-    viewed_product_ids = list(viewed_interactions.values_list('product__id', flat=True))
-    
-    viewed_products = [interaction.product for interaction in viewed_interactions]
-    
+    viewed_product_ids = list(set(viewed_interactions.values_list('product__id', flat=True)))
+    viewed_products = list(set(interaction.product for interaction in viewed_interactions))
+
+
     # Combine product categories and prices into a single string
     user_profile = ' '.join(f'{product.category} {product.price}' for product in viewed_products)
 
@@ -440,7 +441,7 @@ def content_based_recommendation(user, product):
     tfidf_matrix = tfidf_vectorizer.fit_transform([user_profile] + product_profiles)
     
     # Calculate the cosine similarity between the user profile and all product profiles
-    cosine_similarities = linear_kernel(tfidf_matrix[0], tfidf_matrix[1:])
+    cosine_similarities = cosine_similarity(tfidf_matrix[0], tfidf_matrix[1:])
     
     # Create a list of tuples with product ID and similarity score
     product_similarity_pairs = [(all_products[i].id, cosine_similarities[0][i]) for i in range(len(all_products)) if all_products[i].id not in viewed_product_ids]
@@ -452,9 +453,8 @@ def content_based_recommendation(user, product):
     recommended_product_ids = [product_id for product_id, _ in sorted_product_similarity_pairs]
     
     # Retrieve recommended products
-    recommended_products = [get_object_or_404(Product, id=x) for x in recommended_product_ids if x != product.id][:6]
+    recommended_products = [get_object_or_404(Product, id=x) for x in recommended_product_ids if x != product.id][:5]
     return recommended_products
-
 
 
 
@@ -468,75 +468,76 @@ def user_based_collaborative_filtering(target_user):
     all_interactions = UserItemInteraction.objects.all()
 
     # Create a dictionary to store product views for each user
-    user_product_views = {}
+    products_viewed_by_user = {}
     for interaction in all_interactions:
         user_id = interaction.user.id
         product_id = interaction.product.id
-        if user_id not in user_product_views:
-            user_product_views[user_id] = set()
-        user_product_views[user_id].add(product_id)
+        if user_id not in products_viewed_by_user:
+            products_viewed_by_user[user_id] = set()
+        products_viewed_by_user[user_id].add(product_id)
 
-    # Create a matrix where each row represents a user and each column represents a product
-    num_users = User.objects.count()
-    num_users += 10
-    num_products = Product.objects.count()
-    num_products += 10
-    user_product_matrix = np.zeros((num_users, num_products))
-
-    for user_id, product_ids in user_product_views.items():
-        for product_id in product_ids:
-            user_product_matrix[user_id - 1][product_id - 1] = 1  # Adjust indices
-
-    # Calculate user similarity using cosine similarity
-    similarity_matrix = cosine_similarity(user_product_matrix)
-
-    # Get the user index for the target user
-    target_user_index = target_user.id - 1
-
-    # Get similarity scores for the target user
-    user_similarities = similarity_matrix[target_user_index]
-
-    # Normalize similarity scores between 0 and 1
-    scaler = MinMaxScaler()
-    user_similarities = scaler.fit_transform(user_similarities.reshape(-1, 1)).flatten()
-
-    # Sort users based on similarity scores (in descending order)
-    similar_users = sorted(range(len(user_similarities)), key=lambda i: user_similarities[i], reverse=True)
-
-    # Get product recommendations for the target user from similar users' interactions
-    recommended_products = set()
-    for similar_user_index in similar_users:
-        similar_user_interactions = user_product_views.get(similar_user_index + 1, set())
-        recommended_products.update(similar_user_interactions)
-
-    # Exclude products already viewed by the target user
-    target_user_interactions = user_product_views.get(target_user.id, set())
-    recommended_products -= target_user_interactions
-
-    # Get the actual Product objects for the recommended product IDs
-    recommended_products = Product.objects.filter(id__in=recommended_products)
-
-    return recommended_products
+    # Convert product views to text for TF-IDF vectorization
+    user_product_text = []
+    user_ids = []
+    for user_id, product_ids in products_viewed_by_user.items():
+        product_text = " ".join(map(str, product_ids))
+        user_product_text.append(product_text)
+        user_ids.append(user_id)
 
 
+
+
+    # Create TF-IDF vectorizer and compute TF-IDF matrix
+    vectorizer = TfidfVectorizer()
+    tfidf_matrix = vectorizer.fit_transform(user_product_text)
+
+    # Find index of target user
+    target_user_index = user_ids.index(target_user.id)
+
+    # Calculate cosine similarities between target user and all other users
+    cosine_similarities = cosine_similarity(tfidf_matrix[target_user_index], tfidf_matrix)[0]
+
+    # Find indices of top 5 similar users
+    similar_user_indices = cosine_similarities.argsort()[-6:-1][::-1]
+
+    # Get products viewed by top 5 similar users
+    top_products = set()
+    for user_index in similar_user_indices:
+        user_id = user_ids[user_index]
+        top_products.update(products_viewed_by_user[user_id])
+
+    top_products -= products_viewed_by_user[target_user.id]
+    # Create a list of tuples (product_id, view_count) for the top products
+    top_product_views = [(product_id, Product.objects.get(id=product_id).view_count) for product_id in top_products]
+
+    # Sort products by view count in descending order
+    top_product_views.sort(key=lambda x: x[1], reverse=True)
+
+    # Get the top 5 products
+    top_5_products = [get_object_or_404(Product, id=product_id) for product_id, _ in top_product_views[:5]]
+
+    return top_5_products
 
 
 
 
 
 
+
+
+'''
 def hybrid_recommendation(user, product):
-    item_based_collaborative_filtering_results = item_based_collaborative_filtering(product)
-    user_based_collaborative_filtering_results = user_based_collaborative_filtering(user)
-    content_based_recommendation_results = content_based_recommendation(user, product)
+    item_based_collaborative_filtering(product)
+    user_based_collaborative_filtering(user)
+    content_based_recommendation(user, product)
     # Combine the results from all methods
-    combined_results = list(chain(item_based_collaborative_filtering_results, user_based_collaborative_filtering_results, content_based_recommendation_results))
+    #combined_results = list(chain(item_based_collaborative_filtering_results, user_based_collaborative_filtering_results, content_based_recommendation_results))
 
     # Filter out duplicate items
-    unique_results = list(set(combined_results))
+    #unique_results = list(set(combined_results))
 
-    return unique_results
-
+    #return unique_results
+'''
 
 
 
@@ -546,8 +547,12 @@ def hybrid_recommendation(user, product):
 
 def product_detail(request, category_slug, slug):
     product = get_object_or_404(Product, slug=slug, status=Product.ACTIVE)
+    product.view_count += 1
+    product.save()
     UserItemInteraction.objects.create(user=request.user, product=product)
-    recommended_products = hybrid_recommendation(request.user, product)
+    recommended_products = item_based_collaborative_filtering(product)
+    recommended_products2 = user_based_collaborative_filtering(request.user)
+    recommended_products3 = content_based_recommendation(request.user, product)
 
     user_bought_products = UserPurchase.objects.filter(user=request.user, product=product).exists()
 
@@ -572,6 +577,8 @@ def product_detail(request, category_slug, slug):
     return render(request, 'product_detail.html', {
         'product': product,
         'recommended_products': recommended_products,
+        'recommended_products2': recommended_products2,
+        'recommended_products3': recommended_products3,
         'user_bought_products': user_bought_products,
         'comment_form': comment_form,
         'comments' : comments,
