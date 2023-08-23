@@ -259,6 +259,7 @@ def checkout(request):
             success_url=f'{settings.WEBSITE_URL}cart/success/',
             cancel_url=f'{settings.WEBSITE_URL}cart/',
         )
+        
         payment_intent = session.payment_intent
 
         order = Order.objects.create(
@@ -568,9 +569,16 @@ def product_detail(request, category_slug, slug):
         rating = rating_form.cleaned_data['rating']
         UserRating.objects.update_or_create(user=request.user, product=product, defaults={'rating': rating})
 
+
     comments = Comment.objects.filter(product=product)
     ratings = UserRating.objects.filter(product=product)
     average_rating = ratings.aggregate(Avg('rating'))['rating__avg'] or 0
+   
+    no_full_stars = int(average_rating)
+    full_stars = [1 for x in range(no_full_stars)]
+    half_star = average_rating - no_full_stars
+    no_empty_stars = 10 - no_full_stars - (half_star > 0)
+    empty_stars = [1 for x in range(no_empty_stars)]
 
 
 
@@ -585,6 +593,7 @@ def product_detail(request, category_slug, slug):
         'rating_form': rating_form,
         'ratings': ratings,
         'average_rating': average_rating,
+        'full_stars': full_stars, 'half_star': half_star, 'empty_stars': empty_stars,
     })
 
 

@@ -47,17 +47,85 @@
 </div>
 {% endif %}
 
+
 {% if average_rating %}
-<h2 class="mt-4 px-4 py-2 bg-teal-400 text-white text-2xl">Rating: {{ average_rating }}</h2>
+<div class="mt-4 px-4 py-2 bg-teal-400 text-white text-2xl">
+  Rating: 
+  {% for _ in full_stars %}
+    &#9733; <!-- Full star -->
+  {% endfor %}
+  {% if half_star %}
+    <span class="half-star">&#9733;</span>
+  {% endif %}
+  {% for _ in empty_stars %}
+    &#9734; <!-- Empty star -->
+  {% endfor %}
+</div>
 {% endif %}
+
+
+
+
+
 
 {% if user.is_authenticated and user_bought_products %}
 <form class="mt-4" method="post" action="">
     {% csrf_token %}
-    {{ rating_form.rating.label_tag }} {{ rating_form.rating }}
-    <button type="submit" class="mt-2 px-4 py-1 bg-blue-500 text-white rounded-xl">Rate Product</button>
+    <div class="flex items-center">
+        <label for="rating" class="mr-2">Rate Product:</label>
+        <div id="star-rating" class="flex">
+            <span class="star" data-value="1">&#9733;</span>
+            <span class="star" data-value="2">&#9733;</span>
+            <span class="star" data-value="3">&#9733;</span>
+            <span class="star" data-value="4">&#9733;</span>
+            <span class="star" data-value="5">&#9733;</span>
+            <span class="star" data-value="6">&#9733;</span>
+            <span class="star" data-value="7">&#9733;</span>
+            <span class="star" data-value="8">&#9733;</span>
+            <span class="star" data-value="9">&#9733;</span>
+            <span class="star" data-value="10">&#9733;</span>
+        </div>
+        <input type="hidden" id="selected-rating" name="rating" value="">
+        <button type="submit" class="mt-2 px-4 py-1 bg-blue-500 text-white rounded-xl">Rate Product</button>
+    </div>
 </form>
+
+<script>
+    const stars = document.querySelectorAll(".star");
+    const selectedRating = document.getElementById("selected-rating");
+
+    stars.forEach(star => {
+        star.addEventListener("mouseover", () => {
+            const value = star.getAttribute("data-value");
+            for (let i = 1; i <= value; i++) {
+                stars[i - 1].classList.add("yellow");
+            }
+            for (let i = Number(value) + 1; i <= stars.length; i++) {
+                stars[i - 1].classList.remove("yellow");
+            }
+        });
+
+        star.addEventListener("click", () => {
+            const value = star.getAttribute("data-value");
+            selectedRating.value = value;
+        });
+    });
+</script>
+
+<style>
+    .star {
+        cursor: pointer;
+        font-size: 30px;
+        margin-right: 10px;
+        transition: color 0.2s;
+    }
+    
+    .yellow {
+        color: yellow;
+    }
+</style>
 {% endif %}
+
 
 
 <br>
