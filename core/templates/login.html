@@ -1,19 +1,39 @@
 {% extends "base.html" %} 
 {% block title %}Login{% endblock %}
 {% block content %}
-<h2>Login</h2>
+<div class="container mx-auto p-8 max-w-md">
+    <h2 class="text-3xl font-semibold mb-4 text-center">Login</h2>
     {% if error_message %}
-        <p>{{ error_message }}</p>
+        <p class="text-red-500 mb-4 text-center">{{ error_message }}</p>
     {% endif %}
-    <form method="post" class="py-4">
+    <form method="post" class="space-y-4">
         {% csrf_token %}
-        <label for="username">Username:</label>
-        <input type="text" id="username" name="username" required><br>
-        <label for="password">Password:</label>
-        <input type="password" id="password" name="password" required><br>
-        <button type="submit" class="mt-2 py-2 px-4 bg-green-500 hover:bg-green-900 rounded-xl text-white">Login</button>
+        <label for="username" class="block font-medium text-gray-700">Username</label>
+        <input type="text" id="username" name="username" placeholder="mursaleen" required class="rounded-lg w-full py-2 px-3 border focus:outline-none focus:border-blue-500">
+        <label for="password" class="block font-medium text-gray-700">Password</label>
+        <div class="relative">
+            <input type="password" id="password" name="password" placeholder="Password" required class="rounded-lg w-full py-2 px-3 border focus:outline-none focus:border-blue-500">
+            <button type="button" id="togglePassword" class="absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-500 focus:outline-none">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+            </button>
+        </div>
+        <button type="submit" class="w-full bg-blue-500 hover:bg-blue-700 text-white rounded-xl py-2 transition duration-300">Login</button>
     </form>
+    <p class="mt-4 text-gray-600 text-center">Don't have an account? <a href="{% url 'signup' %}" class="text-blue-500 hover:text-blue-700 font-semibold">Signup</a></p>
+</div>
+<script>
+    const togglePasswordButton = document.getElementById('togglePassword');
+    const passwordInput = document.getElementById('password');
 
-    <p>Don't have an account? <a href="{% url 'signup' %}" class="py-2 px-4 bg-green-500 hover:bg-green-900 rounded-xl text-white">Signup</a></p>
+    togglePasswordButton.addEventListener('click', function() {
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+        } else {
+            passwordInput.type = 'password';
+        }
+    });
+</script>
 {% endblock %}
-    

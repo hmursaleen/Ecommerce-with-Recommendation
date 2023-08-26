@@ -1,14 +1,73 @@
 {% extends 'base.html' %}
+{% load static %} <!-- Load static files -->
 
 {% block title %}Search Result{% endblock %}
 
 {% block content %}
-<h1 class="text-2xl">Search</h1>
-<h2 class="text-xs text-gray-600">Search results for "{{ query }}":</h2>
+<div class="search-results">
+    <h1 class="search-header">Search Results</h1>
+    <h2 class="search-query">Results for "{{ query }}"</h2>
 
-{% if products %}
-{% include 'products.html' %}
-{% else %}
-<p>No matching results</p>
-{% endif %}
+    <div class="search-results-container">
+        {% if products %}
+            <div class="products">
+                {% include 'products.html' %}
+            </div>
+        {% else %}
+            <p class="no-results">No matching results</p>
+        {% endif %}
+    </div>
+</div>
+
+<style type="text/css">
+	/* Global Styles */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f9f9f9;
+    color: #333;
+    margin: 0;
+    padding: 0;
+}
+
+/* Search Result Page Styles */
+.search-results {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    text-align:center;
+}
+
+.search-header {
+    font-size: 28px;
+    margin-bottom: 10px;
+}
+
+.search-query {
+    font-size: 18px;
+    color: #777;
+    margin-bottom: 20px;
+}
+
+.search-results-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+
+.products {
+    width: 100%;
+}
+
+.no-results {
+    font-size: 18px;
+    color: #555;
+    text-align: center;
+    margin: 40px 0;
+}
+
+/* ... (product styles, if included) ... */
+
+</style>
 {% endblock %}

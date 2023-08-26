@@ -3,89 +3,69 @@
 {% block title %}My store{% endblock %}
 
 {% block content %}
-<h1 class="text-2xl">My store</h1>
+<h1 class="text-2xl text-center mb-8">My Store</h1>
 
 {% if messages %}
-{% for message in messages %}
-<div class="mt-4 px-8 py-4 bg-teal-200 text-teal-800">
-	{{ message }}
+<div class="flex justify-center mb-8">
+    <div class="py-2 px-6 bg-teal-200 text-teal-800">
+        {% for message in messages %}
+        <p class="text-sm">{{ message }}</p>
+        {% endfor %}
+    </div>
 </div>
-{% endfor %}
 {% endif %}
 
-<hr>
-<h2 class="mt-6 text-xl">My orders</h2>
+<hr class="mb-8">
+<h2 class="text-xl mb-4">My Orders</h2>
 
-<div class="flex flex-wrap">
-
-	<div class="w-1/4">
-		<strong>Order ID</strong>
-	</div>
-
-	<div class="w-1/4">
-		<strong>Title</strong>
-	</div>
-
-	<div class="w-1/4">
-		<strong>Quantity</strong>
-	</div>
-
-	<div class="w-1/4">
-		<strong>Price</strong>
-	</div>
-
+<div class="flex flex-wrap border-b border-gray-300 py-2">
+    <div class="w-1/4 font-semibold">Order ID</div>
+    <div class="w-1/4 font-semibold">Title</div>
+    <div class="w-1/4 font-semibold">Quantity</div>
+    <div class="w-1/4 font-semibold">Price</div>
 </div>
 
 {% for order_item in order_items %}
-	<div class="flex flex-wrap">
-
-		<div class="w-1/4">
-			<a href="{% url 'mystore_order_detail' order_item.order.id %}">{{ order_item.order.id }}</a>
-		</div>
-
-		<div class="w-1/4">
-			{{ order_item.product.title }}
-		</div>
-
-		<div class="w-1/4">
-			{{ order_item.quantity }}
-		</div>
-
-		<div class="w-1/4">
-			৳ {{ order_item.price }}
-		</div>
-	</div>
-
+<div class="flex mb-2">
+    <div class="w-1/4">
+        <a href="{% url 'mystore_order_detail' order_item.order.id %}" class="text-blue-500 hover:underline">{{ order_item.order.id }}</a>
+    </div>
+    <div class="w-1/4">{{ order_item.product.title }}</div>
+    <div class="w-1/4">{{ order_item.quantity }}</div>
+    <div class="w-1/4">৳ {{ order_item.price }}</div>
+</div>
 {% endfor %}
 
-<hr>
-<a href="{% url 'add_product' %}" class="mt-6 inline-block py-4 px-8 bg-teal-500 text-white">Add product</a>
+<hr class="my-8">
+<div class="text-center">
+<a href="{% url 'add_product' %}" class="inline-block py-2 px-6 bg-blue-500 hover:bg-blue-700 text-white mb-4 rounded-xl">Add Product</a>
+</div>
+<br>
+<br>
+<h2 class="text-xl mb-4 font-semibold text-center">My Products</h2>
 
-<h2 class="mt-6 text-xl">My products</h2>
-
-{% if products %}
-<div class="flex flex-wrap"> <!--want to show 3 products per row, so i've to use flex and use width = 1/3 -->
-	{% for product in products %}
-	<div class="product w-1/3 p-2"> <!--for 2 padding space between them -->
-		<div class="p-4 bg-gray-100"> <!--inner padding of 4 -->
-			<a href="{%  url 'edit_product' product.id %}">
-				{% if product.image %}
-					<div class="image mb-2">
-						<img src="{{ product.image.url }}" alt="Image of {{ product.title }}">
-					</div>
-				{% endif %}
-			<h2 class="text-xl">{{ product.title }}</h2>
-			<p class="text-s text-gray-600">৳ {{ product.price }} </p>
-			<hr class="my-3">
-			<p><strong>Status: </strong>{{ product.get_status_display }}</strong></p>
-			</a>
-		</div>
-	</div>
-	{% endfor %}
+<div class="flex flex-wrap">
+    {% for product in products %}
+    <div class="product w-1/3 p-2">
+        <div class="p-4 bg-gray-100">
+            <a href="{% url 'edit_product' product.id %}">
+                {% if product.image %}
+                <div class="image mb-2">
+                    <img src="{{ product.image.url }}" alt="Image of {{ product.title }}">
+                </div>
+                {% endif %}
+                <h2 class="text-xl">{{ product.title }}</h2>
+                <p class="text-sm text-gray-600">৳ {{ product.price }}</p>
+                <hr class="my-3">
+                <p><strong>Status: </strong>{{ product.get_status_display }}</p>
+            </a>
+        </div>
+    </div>
+    {% endfor %}
 </div>
 
-{% else %}
-	<p class="mt-4 py-4 px-8 bg-gray-200">You don't have any products yet...</p>
+{% if not products %}
+<p class="mt-4 py-4 px-8 bg-gray-200 text-center">You don't have any products yet...</p>
 {% endif %}
 
 {% endblock %}

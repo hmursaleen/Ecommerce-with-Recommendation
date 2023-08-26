@@ -5,38 +5,44 @@
 
 {% block content %}
 {% if product.image %}
-<div class="image mb-4 ">
-	<img src="{{ product.image.url }}" alt="Image of {{ product.title }}">
+<div class="image mb-3 ">
+  <img src="{{ product.image.url }}" alt="Image of {{ product.title }}">
 </div>
 {% endif %}
 
-<h1 class="text-2xl">{{ product.title }}</h1>
-<a href="{% url 'category_detail' product.category.slug %}" class="text-2xl">Category : {{ product.category.title }}</a>
-<p class="text-s text-gray-500">
-	৳ {{ product.price }}
-	-
-	<a href="{% url 'vendor_detail' product.user.id %}">{{ product.user.username }}</a>
+<h1 class="text-2xl text-center font-semibold">{{ product.title }}</h1>
+<br>
+<a href="{% url 'category_detail' product.category.slug %}" class="text-2xl mt-4 text-center px-4 py-2 bg-blue-500 hover:bg-blue-700 rounded-xl font-semibold">Category : {{ product.category.title }}</a>
+<p class="text-s mt-4 text-gray-500">
+  ৳ {{ product.price }}
+  -
+  <a href="{% url 'vendor_detail' product.user.id %}">{{ product.user.username }}</a>
 </p>
 
 {% if product.description %}
 <p class="mt-4">
-	{{ product.description }}
+  {{ product.description }}
 </p>
 {% endif %}
 
-<a href="{% url 'add_to_cart' product.id %}" class="inline-block mt-4 px-4 py-2 bg-teal-500 text-white rounded-xl">Add to cart</a>
+<a href="{% url 'add_to_cart' product.id %}" class="inline-block mt-4 px-4 py-2 bg-blue-500 hover:bg-blue-700 text-white rounded-xl">Add to cart</a>
 
+<br>
+<br>
 
 {% if user.is_authenticated and user_bought_products %}
 <form class="mt-4" method="post" action="">
     {% csrf_token %}
     {{ comment_form.text }}
-    <button type="submit" class="mt-2 px-4 py-1 bg-blue-500 text-white rounded-xl">Add Comment</button>
+    <button type="submit" class="mt-2 px-4 py-1 bg-blue-500 hover:bg-blue-700 text-white rounded-xl">Add Comment</button>
 </form>
 {% endif %}
 
+
+<br>
+<br>
 {% if comments %}
-<h2 class="mt-4 text-2xl">Hear from others who bought this</h2>
+<h2 class="mt-4 text-2xl text-center font-semibold">Hear from others who bought this</h2>
 <div class="mt-2">
     {% for comment in comments %}
     <div class="border p-2 mt-2">
@@ -49,17 +55,8 @@
 
 
 {% if average_rating %}
-<div class="mt-4 px-4 py-2 bg-teal-400 text-white text-2xl">
-  Rating: 
-  {% for _ in full_stars %}
-    &#9733; <!-- Full star -->
-  {% endfor %}
-  {% if half_star %}
-    <span class="half-star">&#9733;</span>
-  {% endif %}
-  {% for _ in empty_stars %}
-    &#9734; <!-- Empty star -->
-  {% endfor %}
+<div class="mt-4 px-4 py-2 bg-blue-500 text-white text-2xl rounded-xl text-center">
+  Rating: {{average_rating}}
 </div>
 {% endif %}
 
@@ -86,7 +83,7 @@
             <span class="star" data-value="10">&#9733;</span>
         </div>
         <input type="hidden" id="selected-rating" name="rating" value="">
-        <button type="submit" class="mt-2 px-4 py-1 bg-blue-500 text-white rounded-xl">Rate Product</button>
+        <button type="submit" class="mt-2 px-4 py-1 bg-blue-500 hover:bg-blue-700 text-white rounded-xl">Rate Product</button>
     </div>
 </form>
 
@@ -130,60 +127,60 @@
 
 <br>
 <br>
-<h2 class="mt-4 text-2xl"> You might also like </h2>
-<h2 class="mt-4 text-2xl px-4 py-2 bg-teal-400">Item based recommendation </h2>
+<h2 class="mt-4 text-2xl text-center"> You might also like </h2>
+<h2 class="mt-4 text-2xl px-4 py-2 bg-blue-500 rounded-xl text-center">Item based recommendation </h2>
 <div class="mt-2 flex flex-wrap"> <!--want to show 3 products per row, so i've to use flex and use width = 1/3 -->
-	{% for product in recommended_products %}
-	<div class="product w-1/5 p-2"> 
-		<div class="p-4 bg-gray-100"> 
-			<a href="{%  url 'product_detail' product.category.slug product.slug %}">
-			<div class="image mb-2">
-				<img src="{{ product.get_thumbnail }}" alt="Image of {{ product.title }}">
-			</div>
-			<h2 class="text-xl">{{ product.title }}</h2>
-			<p class="text-s text-gray-600">৳ {{ product.price }} </p>
-			</a>
-		</div>
-	</div>
-	{% endfor %}
+  {% for product in recommended_products %}
+  <div class="product w-1/5 p-2"> 
+    <div class="p-4 bg-gray-100"> 
+      <a href="{%  url 'product_detail' product.category.slug product.slug %}">
+      <div class="image mb-2">
+        <img src="{{ product.get_thumbnail }}" alt="Image of {{ product.title }}">
+      </div>
+      <h2 class="text-xl">{{ product.title }}</h2>
+      <p class="text-s text-gray-600">৳ {{ product.price }} </p>
+      </a>
+    </div>
+  </div>
+  {% endfor %}
 </div>
 <br>
 <br>
 <br>
-<h2 class="mt-4 text-2xl px-4 py-2 bg-teal-400">User based recommendation </h2>
+<h2 class="mt-4 text-2xl px-4 py-2 bg-blue-500 rounded-xl text-center">User based recommendation </h2>
 <div class="mt-2 flex flex-wrap"> <!--want to show 3 products per row, so i've to use flex and use width = 1/3 -->
-	{% for product in recommended_products2 %}
-	<div class="product w-1/5 p-2"> 
-		<div class="p-4 bg-gray-100"> 
-			<a href="{%  url 'product_detail' product.category.slug product.slug %}">
-			<div class="image mb-2">
-				<img src="{{ product.get_thumbnail }}" alt="Image of {{ product.title }}">
-			</div>
-			<h2 class="text-xl">{{ product.title }}</h2>
-			<p class="text-s text-gray-600">৳ {{ product.price }} </p>
-			</a>
-		</div>
-	</div>
-	{% endfor %}
+  {% for product in recommended_products2 %}
+  <div class="product w-1/5 p-2"> 
+    <div class="p-4 bg-gray-100"> 
+      <a href="{%  url 'product_detail' product.category.slug product.slug %}">
+      <div class="image mb-2">
+        <img src="{{ product.get_thumbnail }}" alt="Image of {{ product.title }}">
+      </div>
+      <h2 class="text-xl">{{ product.title }}</h2>
+      <p class="text-s text-gray-600">৳ {{ product.price }} </p>
+      </a>
+    </div>
+  </div>
+  {% endfor %}
 </div>
 <br>
 <br>
 <br>
-<h2 class="mt-4 text-2xl px-4 py-2 bg-teal-400">Content based recommendation </h2>
+<h2 class="mt-4 text-2xl px-4 py-2 bg-blue-500 rounded-xl text-center">Content based recommendation </h2>
 <div class="mt-2 flex flex-wrap"> <!--want to show 3 products per row, so i've to use flex and use width = 1/3 -->
-	{% for product in recommended_products3 %}
-	<div class="product w-1/5 p-2"> 
-		<div class="p-4 bg-gray-100"> 
-			<a href="{%  url 'product_detail' product.category.slug product.slug %}">
-			<div class="image mb-2">
-				<img src="{{ product.get_thumbnail }}" alt="Image of {{ product.title }}">
-			</div>
-			<h2 class="text-xl">{{ product.title }}</h2>
-			<p class="text-s text-gray-600">৳ {{ product.price }} </p>
-			</a>
-		</div>
-	</div>
-	{% endfor %}
+  {% for product in recommended_products3 %}
+  <div class="product w-1/5 p-2"> 
+    <div class="p-4 bg-gray-100"> 
+      <a href="{%  url 'product_detail' product.category.slug product.slug %}">
+      <div class="image mb-2">
+        <img src="{{ product.get_thumbnail }}" alt="Image of {{ product.title }}">
+      </div>
+      <h2 class="text-xl">{{ product.title }}</h2>
+      <p class="text-s text-gray-600">৳ {{ product.price }} </p>
+      </a>
+    </div>
+  </div>
+  {% endfor %}
 </div>
 <br>
 

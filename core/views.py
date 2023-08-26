@@ -14,7 +14,8 @@ from itertools import chain
 from sklearn.preprocessing import MinMaxScaler
 import numpy as np
 import json
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
+from django.template.loader import render_to_string
 from .cart import Cart
 from .forms import OrderForm, ProductForm, CommentForm, RatingForm
 import stripe
@@ -181,7 +182,9 @@ def add_to_cart(request, product_id):
 
 
 def success(request):
-    return render(request, 'success.html')
+    return render(request, 'success.html', {
+        'name' : request.user.username
+        })
 
 
 
@@ -306,6 +309,8 @@ def search(request):
         'query' : query,
         'products' : products,
         })
+
+
 
 
 

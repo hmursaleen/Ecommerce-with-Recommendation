@@ -1,21 +1,27 @@
-{% extends 'base.html' %}
+{% extends 'base.html' %} <!-- edited -->
 
 {% block title %}{{ title }}{% endblock %}
 
 {% block content %}
-<h1 class="text-2xl">{{ title }}</h1>
+<div class="max-w-4xl mx-auto py-8 px-6">
+    <h1 class="text-3xl font-semibold mb-6">{{ title }}</h1>
 
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-semibold mb-4">Add Product</h2>
 
-<h1>Add Product</h1>
+        <form method="post" enctype="multipart/form-data" class="space-y-4">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="bg-green-500 hover:bg-green-700 text-white py-2 px-4 rounded">
+                Add Product
+            </button>
+        </form>
 
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Add Product</button>
-    </form>
-
-{% if product %}
-<a href="{% url 'delete_product' product.id %}" class="mt-2 inline-block py-4 px-8 bg-red-500 text-white">Delete product</a>
-{% endif %}
-
-{% endblock %} 
+        {% if product %}
+        <a href="{% url 'delete_product' product.id %}" class="mt-4 inline-block py-2 px-4 bg-red-500 text-white hover:bg-red-700 rounded">
+            Delete product
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
