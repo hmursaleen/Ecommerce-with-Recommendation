@@ -5,7 +5,7 @@
 
 {% block content %}
 {% if product.image %}
-<div class="image mb-3 ">
+<div class="flex justify-center mb-3">
   <img src="{{ product.image.url }}" alt="Image of {{ product.title }}">
 </div>
 {% endif %}
@@ -129,7 +129,7 @@
 <br>
 <h2 class="mt-4 text-2xl text-center"> You might also like </h2>
 <h2 class="mt-4 text-2xl px-4 py-2 bg-blue-500 rounded-xl text-center">Item based recommendation </h2>
-<div class="mt-2 flex flex-wrap"> <!--want to show 3 products per row, so i've to use flex and use width = 1/3 -->
+<div class="mt-2 flex flex-wrap"> 
   {% for product in recommended_products %}
   <div class="product w-1/5 p-2"> 
     <div class="p-4 bg-gray-100"> 
@@ -148,7 +148,7 @@
 <br>
 <br>
 <h2 class="mt-4 text-2xl px-4 py-2 bg-blue-500 rounded-xl text-center">User based recommendation </h2>
-<div class="mt-2 flex flex-wrap"> <!--want to show 3 products per row, so i've to use flex and use width = 1/3 -->
+<div class="mt-2 flex flex-wrap"> 
   {% for product in recommended_products2 %}
   <div class="product w-1/5 p-2"> 
     <div class="p-4 bg-gray-100"> 
@@ -167,7 +167,7 @@
 <br>
 <br>
 <h2 class="mt-4 text-2xl px-4 py-2 bg-blue-500 rounded-xl text-center">Content based recommendation </h2>
-<div class="mt-2 flex flex-wrap"> <!--want to show 3 products per row, so i've to use flex and use width = 1/3 -->
+<div class="mt-2 flex flex-wrap"> 
   {% for product in recommended_products3 %}
   <div class="product w-1/5 p-2"> 
     <div class="p-4 bg-gray-100"> 
@@ -183,5 +183,4 @@
   {% endfor %}
 </div>
 <br>
-
 {% endblock %}

@@ -316,113 +316,64 @@ def search(request):
 
 
 
-import nltk
-from nltk.corpus import stopwords
-from nltk.tokenize import word_tokenize
-from nltk.stem import PorterStemmer, WordNetLemmatizer
 
-nltk.download('punkt')
-nltk.download('stopwords')
+import nltk
+from nltk.tokenize import word_tokenize
 nltk.download('wordnet')
 
-
-import re
-
 def preprocess_text(text):
-    # Lowercasing
-    text = text.lower()
-    
-    # Tokenization
     tokens = word_tokenize(text)
-    
-    # Stop Word Removal
-    stop_words = set(stopwords.words('english'))
-    tokens = [token for token in tokens if token not in stop_words]
-    
-    # Punctuation Removal and Special Character Removal
-    tokens = [re.sub(r'[^\w\s]', '', token) for token in tokens]
-    tokens = [token for token in tokens if token]  # Remove empty tokens
-    
-    # Numerical Value Conversion
+    tokens = [token for token in tokens if token] 
     tokens = ['NUM' if token.isdigit() else token for token in tokens]
-    
-    # Stemming and Lemmatization
-    stemmer = PorterStemmer()
-    lemmatizer = WordNetLemmatizer()
-    tokens = [stemmer.stem(lemmatizer.lemmatize(token)) for token in tokens]
-    
-    # Spell Checking and Correction (requires external libraries)
-    # Handle HTML Tags and URLs (requires additional code)
-    # Removing Emojis and Special Symbols (requires additional code)
-    
-    # Whitespace Removal
     tokens = [token.strip() for token in tokens]
-    
-    # Handling Contractions (requires additional code)
-    # Normalization (requires additional code)
-    
-    # Removing Short and Long Words
-    tokens = [token for token in tokens if len(token) > 1 and len(token) < 15]
-    
-    # Removing Duplicates
     tokens = list(set(tokens))
-    
-    # Token Filtering (requires additional code)
-    
-    # N-gram Generation (requires additional code)
-    
-    # Handling Abbreviations and Acronyms (requires additional code)
-    
-    # Language Translation and Transliteration (requires external libraries)
-    
     return tokens
+
+    
+
+
+
 
 
 
 def item_based_collaborative_filtering(product):
-    all_interactions = UserItemInteraction.objects.filter(product__category=product.category)
-    all_interactions = all_interactions.exclude(product=product)
+    products = Product.objects.filter(category=product.category)
     # Create a dictionary to store product descriptions for each product
-    product_descriptions = {}
-    for interaction in all_interactions:
-        product_id = interaction.product.id
-        product_description = interaction.product.description
-        if product_id not in product_descriptions:
-            product_descriptions[product_id] = product_description
-
-    product_descriptions[product.id] = product.description
-    
+    product_tags = {}
+    product_tags[product.slug] = product.tags
+    for prod in products:
+        product_slug = prod.slug
+        product_tag = prod.tags
+        if product_slug not in product_tags:
+            product_tags[product_slug] = product_tag
 
     tfidf_vectorizer = TfidfVectorizer()
 
-
-    product_ids = []
+    product_slugs = []
     product_texts = []
-    for product_id, descriptions in product_descriptions.items():
-        product_ids.append(product_id)
-        description = preprocess_text(descriptions)
-        product_texts.append(" ".join(description))
+    for product_slug, tags in product_tags.items():
+        tag = preprocess_text(tags)
+        product_texts.append(" ".join(tag))
+        product_slugs.append(product_slug)
 
     tfidf_matrix = tfidf_vectorizer.fit_transform(product_texts)
-
-    # Calculate the cosine similarity between the target product and all other products
-    target_product_index = product_ids.index(product.id)
+    target_product_index = product_slugs.index(product.slug)
     cosine_similarities = cosine_similarity(tfidf_matrix[target_product_index], tfidf_matrix)
 
     # Get similarity scores for the target product
     similarity_scores = cosine_similarities[0]
 
-    # Sort product IDs by similarity scores in descending order
-    sorted_product_ids = [x for _, x in sorted(zip(similarity_scores, product_ids), reverse=True)]
+    # Create a list of tuples containing product slug and similarity score
+    product_similarity = [(product_slug, similarity) for product_slug, similarity in zip(product_slugs, similarity_scores)]
 
-    # Get the top N most similar product IDs (excluding the target product)
-    top_similar_product_ids = sorted_product_ids[:6]
-   
-    # Get the actual Product objects for the recommended product IDs
-    recommended_products = [get_object_or_404(Product, id=x) for x in top_similar_product_ids if x != product.id][:5]
-    #recommended_products = Product.objects.filter(id__in=top_similar_product_ids)
-    #recommended_products = recommended_products.exclude(slug=product.slug)
-    return recommended_products
+    # Sort the list based on similarity scores in descending order
+    sorted_product_similarity = sorted(product_similarity, key=lambda x: x[1], reverse=True)
+
+    # Exclude the target product slug from the recommended products
+    recommended_products = [get_object_or_404(Product, slug=slug) for slug, _ in sorted_product_similarity if slug != product.slug]
+
+    # Return the top 5 recommended products
+    return recommended_products[:5]
 
 
 
