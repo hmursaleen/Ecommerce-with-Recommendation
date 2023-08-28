@@ -304,7 +304,7 @@ def checkout(request):
 
 def search(request):
     query = request.GET.get('query', '')
-    products = Product.objects.filter(status=Product.ACTIVE).filter(Q(title__icontains=query) | Q(slug__icontains=query))
+    products = Product.objects.filter(status=Product.ACTIVE).filter(Q(tags__icontains=query))
     return render(request, 'search.html', {
         'query' : query,
         'products' : products,
@@ -319,7 +319,6 @@ def search(request):
 
 import nltk
 from nltk.tokenize import word_tokenize
-nltk.download('wordnet')
 
 def preprocess_text(text):
     tokens = word_tokenize(text)
@@ -387,19 +386,21 @@ def content_based_recommendation(user, product):
     viewed_product_ids = list(set(viewed_interactions.values_list('product__id', flat=True)))
     viewed_products = list(set(interaction.product for interaction in viewed_interactions))
 
-
-    # Combine product categories and prices into a single string
-    user_profile = ' '.join(f'{product.category} {product.price}' for product in viewed_products)
-
+    user_profile = ' '.join(f'{product.tags}' for product in viewed_products)
     all_products = Product.objects.all()
-    product_profiles = [' '.join([str(product.category), str(product.price)]) for product in all_products]
+    product_profiles = [' '.join([str(product.tags)]) for product in all_products]
     
+    profiles = []
+    user_profile = preprocess_text(user_profile)
+    profiles.append(" ".join(user_profile))
+
+    for x in product_profiles:
+        x = preprocess_text(x)
+        profiles.append(" ".join(x))
+
     tfidf_vectorizer = TfidfVectorizer()
-    tfidf_matrix = tfidf_vectorizer.fit_transform([user_profile] + product_profiles)
-    
-    # Calculate the cosine similarity between the user profile and all product profiles
+    tfidf_matrix = tfidf_vectorizer.fit_transform(profiles)
     cosine_similarities = cosine_similarity(tfidf_matrix[0], tfidf_matrix[1:])
-    
     # Create a list of tuples with product ID and similarity score
     product_similarity_pairs = [(all_products[i].id, cosine_similarities[0][i]) for i in range(len(all_products)) if all_products[i].id not in viewed_product_ids]
     
@@ -412,7 +413,7 @@ def content_based_recommendation(user, product):
     # Retrieve recommended products
     recommended_products = [get_object_or_404(Product, id=x) for x in recommended_product_ids if x != product.id][:5]
     return recommended_products
-
+    
 
 
 
@@ -421,12 +422,15 @@ def content_based_recommendation(user, product):
 
 
 def user_based_collaborative_filtering(target_user):
-    # Get all interactions for all users
-    all_interactions = UserItemInteraction.objects.all()
+    # Separate interactions of the target user
+    target_user_interactions = UserItemInteraction.objects.filter(user=target_user)
+
+    # Get interactions of all other users
+    all_other_users_interactions = UserItemInteraction.objects.exclude(user=target_user)
 
     # Create a dictionary to store product views for each user
     products_viewed_by_user = {}
-    for interaction in all_interactions:
+    for interaction in all_other_users_interactions:
         user_id = interaction.user.id
         product_id = interaction.product.id
         if user_id not in products_viewed_by_user:
@@ -441,29 +445,29 @@ def user_based_collaborative_filtering(target_user):
         user_product_text.append(product_text)
         user_ids.append(user_id)
 
-
-
+    # Add target user's interactions to the beginning of the list
+    target_product_text = " ".join(map(str, [interaction.product.id for interaction in target_user_interactions]))
+    user_product_text.insert(0, target_product_text)
+    user_ids.insert(0, target_user.id)
 
     # Create TF-IDF vectorizer and compute TF-IDF matrix
     vectorizer = TfidfVectorizer()
     tfidf_matrix = vectorizer.fit_transform(user_product_text)
 
-    # Find index of target user
-    target_user_index = user_ids.index(target_user.id)
+    cosine_similarities = cosine_similarity(tfidf_matrix[0], tfidf_matrix)[0]
 
-    # Calculate cosine similarities between target user and all other users
-    cosine_similarities = cosine_similarity(tfidf_matrix[target_user_index], tfidf_matrix)[0]
-
-    # Find indices of top 5 similar users
+    # Find indices of top 5 similar users (excluding the target user)
     similar_user_indices = cosine_similarities.argsort()[-6:-1][::-1]
 
-    # Get products viewed by top 5 similar users
+    # Get products viewed by top 5 similar users but not by the target user
     top_products = set()
     for user_index in similar_user_indices:
         user_id = user_ids[user_index]
         top_products.update(products_viewed_by_user[user_id])
 
-    top_products -= products_viewed_by_user[target_user.id]
+    target_user_viewed_products = set([interaction.product.id for interaction in target_user_interactions])
+    top_products -= target_user_viewed_products
+
     # Create a list of tuples (product_id, view_count) for the top products
     top_product_views = [(product_id, Product.objects.get(id=product_id).view_count) for product_id in top_products]
 
@@ -514,12 +518,11 @@ def product_detail(request, category_slug, slug):
     user_bought_products = UserPurchase.objects.filter(user=request.user, product=product).exists()
 
     comment_form = CommentForm(request.POST or None)
-    rating_form = RatingForm(request.POST or None)  # Create a form to capture ratings
+    rating_form = RatingForm(request.POST or None)  
 
     if request.method == 'POST' and comment_form.is_valid() and user_bought_products:
         comment_text = comment_form.cleaned_data['text']
         Comment.objects.create(user=request.user, product=product, text=comment_text)
-        # Redirect or refresh the page after adding a comment
 
     if request.method == 'POST' and rating_form.is_valid() and user_bought_products:
         rating = rating_form.cleaned_data['rating']
