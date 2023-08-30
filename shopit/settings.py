@@ -45,7 +45,9 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'shopit.urls'
-WEBSITE_URL = 'http://127.0.0.1:8000/'
+#WEBSITE_URL = 'http://127.0.0.1:8000/'
+
+WEBSITE_URL = 'https://mursaleen-ecommerce.onrender.com/'
 
 STRIPE_PUB_KEY = 'pk_test_51NUXlWSDhw8NOhRDEsziKDOp8A5wU3zozn8V3NNV9L2mZJVzELdb5eMY1jsuB5OVwcY4rUrYUrSnv6VptMMlhGiW00Dn0w2EVO'
 
