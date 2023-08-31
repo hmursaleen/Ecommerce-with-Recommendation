@@ -304,7 +304,7 @@ def checkout(request):
 
 def search(request):
     query = request.GET.get('query', '')
-    products = Product.objects.filter(status=Product.ACTIVE).filter(Q(tags__icontains=query))
+    products = Product.objects.filter(status=Product.ACTIVE).filter(Q(keyword__icontains=query))
     return render(request, 'search.html', {
         'query' : query,
         'products' : products,
@@ -339,10 +339,10 @@ def item_based_collaborative_filtering(product):
     products = Product.objects.filter(category=product.category)
     # Create a dictionary to store product descriptions for each product
     product_tags = {}
-    product_tags[product.slug] = product.tags
+    product_tags[product.slug] = product.keyword
     for prod in products:
         product_slug = prod.slug
-        product_tag = prod.tags
+        product_tag = prod.keyword
         if product_slug not in product_tags:
             product_tags[product_slug] = product_tag
 
@@ -386,9 +386,9 @@ def content_based_recommendation(user, product):
     viewed_product_ids = list(set(viewed_interactions.values_list('product__id', flat=True)))
     viewed_products = list(set(interaction.product for interaction in viewed_interactions))
 
-    user_profile = ' '.join(f'{product.tags}' for product in viewed_products)
+    user_profile = ' '.join(f'{product.keyword}' for product in viewed_products)
     all_products = Product.objects.all()
-    product_profiles = [' '.join([str(product.tags)]) for product in all_products]
+    product_profiles = [' '.join([str(product.keyword)]) for product in all_products]
     
     profiles = []
     user_profile = preprocess_text(user_profile)
