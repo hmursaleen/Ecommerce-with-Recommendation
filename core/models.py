@@ -47,7 +47,7 @@ class Product(models.Model):
 	title = models.CharField(max_length=50)
 	slug = models.SlugField(max_length=50)
 	description = models.TextField(blank=True)
-	tags = models.TextField(default='')
+	tags = models.TextField()
 	price = models.PositiveIntegerField()
 	image = models.ImageField(upload_to='uploads/product_images', blank=True, null=True)
 	thumbnail = models.ImageField(upload_to='uploads/product_images/thumbnail', blank=True, null=True)
